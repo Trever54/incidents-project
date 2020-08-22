@@ -46,5 +46,9 @@ public class Incident {
         return builder.toString();
     }
 
+    public JsonObject getJsonObject() {
+        return this.jsonObject;
+    }
+
     
 }

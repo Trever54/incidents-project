@@ -35,12 +35,14 @@ public class IncidentDataReader {
     @Value("${data.file}")
     private String stringPath;
 
+    public Incident incident;
+
     /**
      * Bean which reads and stores the JSON data on startup of the application
      * such that it can be accessed by other parts of the application
      */
     @Bean
-    public void readData() {
+    public Incident readData() {
 
         LOGGER.info("Reading in data from path: '{}'", stringPath);
 
@@ -50,7 +52,9 @@ public class IncidentDataReader {
         // parse info into an Incident object
         Incident incident = parseIncident(jsonContent);
 
-        LOGGER.info(incident);
+        this.incident = incident;
+
+        return incident;
 
     }
 

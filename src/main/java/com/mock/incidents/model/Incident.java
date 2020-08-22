@@ -28,6 +28,7 @@ public class Incident {
 
     public String toString() {
         StringBuilder builder = new StringBuilder();
+        builder.append("\n");
         builder.append("Latitude: ");
         builder.append(this.latitude);
         builder.append("\n");

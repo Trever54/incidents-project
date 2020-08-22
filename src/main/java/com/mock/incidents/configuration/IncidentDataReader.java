@@ -22,12 +22,12 @@ import com.mock.incidents.model.Incident;
  * JSON config file whose location is specified in application.properties.
  */
 @Configuration
-public class JSONReader {
+public class IncidentDataReader {
 
     /**
      * Logger
      */
-    private final static Logger LOGGER = LogManager.getLogger(JSONReader.class);
+    private final static Logger LOGGER = LogManager.getLogger(IncidentDataReader.class);
 
     /**
      * Absolute path to the data file to read

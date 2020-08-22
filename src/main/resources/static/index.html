@@ -4,71 +4,14 @@
         <!-- Mapbox GL -->
         <script src='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js'></script>
         <link href='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css' rel='stylesheet' />
+        <!-- JQuery -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     </head>
     <body>
 
         <!-- Mapbox GL Map -->
         <div id='map' style='width: 1200px; height: 900px;'></div>
-        <script>
-            // TODO - put this key in a config
-            mapboxgl.accessToken = 'pk.eyJ1IjoidHJldmVybW9jayIsImEiOiJja2U1dDJpaHcxNXR1MnNwZHZ2NTJzY21iIn0.Mo-JC8_CVEFKjQT2Ty0OZg';
-            var map = new mapboxgl.Map({
-                container: 'map',
-                style: 'mapbox://styles/mapbox/streets-v11'
-            });
-
-            // Actually load a point on the map (FRANKLIN address from data file)
-            map.on('load', function () {
-                // Add an image to use as a custom marker
-                map.loadImage(
-                    'https://docs.mapbox.com/mapbox-gl-js/assets/custom_marker.png',
-                    function (error, image) {
-                        if (error) throw error;
-                        map.addImage('custom-marker', image);
-                        // Add a GeoJSON source with point(s)
-                        map.addSource('points', {
-                            'type': 'geojson',
-                            'data': {
-                                'type': 'FeatureCollection',
-                                'features': [
-                                    {
-                                        // feature for Mapbox DC
-                                        'type': 'Feature',
-                                        'geometry': {
-                                            'type': 'Point',
-                                            // longitude, latitude
-                                            'coordinates': [-77.440624, 37.541885]
-                                        },
-                                        'properties': {
-                                            'title': 'FRANKLIN'
-                                        }
-                                    }
-                                ]
-                            }
-                        });
-
-                        // Add a symbol layer
-                        map.addLayer({
-                            'id': 'points',
-                            'type': 'symbol',
-                            'source': 'points',
-                            'layout': {
-                                'icon-image': 'custom-marker',
-                                // get the title name from the source's "title" property
-                                'text-field': ['get', 'title'],
-                                'text-font': [
-                                    'Open Sans Semibold',
-                                    'Arial Unicode MS Bold'
-                                ],
-                                'text-offset': [0, 1.25],
-                                'text-anchor': 'top'
-                            }
-                        });
-                    }
-                );
-            });
-
-        </script> 
+        <script type="text/javascript" src="js/incidents.js"></script>
 
     </body>
 </html>

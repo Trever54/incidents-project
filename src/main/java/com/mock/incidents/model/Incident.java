@@ -1,6 +1,6 @@
 package com.mock.incidents.model;
 
-import java.time.ZonedDateTime;
+import java.time.Instant;
 
 import com.google.gson.JsonObject;
 
@@ -17,12 +17,12 @@ public class Incident {
     private String startDateString;
     private String endDateString;
     private String timeZone;
-    private ZonedDateTime startDateWithTime;
-    private ZonedDateTime endDateWithTime;
+    private Instant startInstant;
+    private Instant endInstant;
 
     public Incident(JsonObject jsonObject, float latitude, float longitude, 
             String startDateString, String endDateString, String timeZone, 
-            ZonedDateTime startDateWithTime, ZonedDateTime endDateWithTime) {
+            Instant startInstant, Instant endInstant) {
 
         this.jsonObject = jsonObject;
         this.latitude = latitude;
@@ -30,8 +30,8 @@ public class Incident {
         this.startDateString = startDateString;
         this.endDateString = endDateString;
         this.timeZone = timeZone;
-        this.startDateWithTime = startDateWithTime;
-        this.endDateWithTime = endDateWithTime;
+        this.startInstant = startInstant;
+        this.endInstant = endInstant;
 
     }
 
@@ -54,10 +54,10 @@ public class Incident {
         builder.append(this.timeZone);
         builder.append("\n");
         builder.append("Start Date With Time: ");
-        builder.append(this.startDateWithTime);
+        builder.append(this.startInstant);
         builder.append("\n");
         builder.append("End Date With Time: ");
-        builder.append(this.endDateWithTime);
+        builder.append(this.endInstant);
         return builder.toString();
     }
 
@@ -85,12 +85,12 @@ public class Incident {
         return this.timeZone;
     }
 
-    public ZonedDateTime getStartDateWithTime() {
-        return this.startDateWithTime;
+    public Instant getStartInstant() {
+        return this.startInstant;
     }
 
-    public ZonedDateTime getEndDateWithTime() {
-        return this.endDateWithTime;
+    public Instant getEndInstant() {
+        return this.endInstant;
     }
 
     

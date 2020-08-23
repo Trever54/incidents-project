@@ -1,5 +1,8 @@
 package com.mock.incidents.configuration;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.mock.incidents.component.IncidentDataReader;
 import com.mock.incidents.model.Incident;
 import com.mock.incidents.service.MeteostatUtilityService;
@@ -43,6 +46,11 @@ public class DataInitializer {
     private MeteostatUtilityService meteostat;
 
     /**
+     * Enriched data created from initialization
+     */
+    public JsonObject enrichedData;
+
+    /**
      * Bean that initializes the data by reading the specified data file
      * and then enriching it with weather data
      */
@@ -51,6 +59,8 @@ public class DataInitializer {
 
         // read in incident
         Incident incident = dataReader.readData(stringPath);
+        // initialize enriched data
+        enrichedData = incident.getJsonObject();
 
         // request weather data
         float latitude = incident.getLatitude();
@@ -58,11 +68,13 @@ public class DataInitializer {
         String startDate = incident.getStartDateString();
         String endDate = incident.getEndDateString();
         String timeZone = incident.getTimeZone();
-        // String weatherData = meteostat.requestWeatherData(latitude, longitude, startDate, endDate, timeZone);
+        JsonObject weatherData = meteostat.requestWeatherData(latitude, longitude, startDate, endDate, timeZone);
 
         // Parse the time(s) we want from the weather data
-        LOGGER.info(incident);
+        JsonArray trimmedWeatherData = meteostat.trimWeatherData(weatherData, incident.getStartInstant(), incident.getEndInstant(), timeZone);
 
+        // add weather to the enriched data
+        enrichedData.add("weather", trimmedWeatherData);
         
     }
 

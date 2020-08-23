@@ -118,14 +118,11 @@ public class IncidentDataReader {
             String timeZone = fireDepartment.get("timezone").getAsString();
 
             // Actual dates, including time (needed to weed through the meteostat weather service response)
-            ZoneId zoneId = ZoneId.of(timeZone);
             Instant startInstant = Instant.parse(eventOpened);
-            ZonedDateTime startDateWithTime = startInstant.atZone(zoneId);
             Instant endInstant = Instant.parse(eventClosed);
-            ZonedDateTime endDateWithTime = endInstant.atZone(zoneId);
 
             incident = new Incident(jsonContent, latitude, longitude, 
-                    startDateString, endDateString, timeZone, startDateWithTime, endDateWithTime);
+                    startDateString, endDateString, timeZone, startInstant, endInstant);
 
         } catch (NullPointerException | IllegalArgumentException e) {
             LOGGER.error("Failed to create incident object for JSON: {}", jsonContent, e);

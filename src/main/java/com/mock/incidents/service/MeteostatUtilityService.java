@@ -11,6 +11,19 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 /**
  * Class which interacts with meteostat to get weather data
@@ -40,10 +53,10 @@ public class MeteostatUtilityService {
      * @param incident - the incident to get weather data for
      * @return - the weather data for that incident
      */
-    public String requestWeatherData(float latitude, float longitude, 
+    public JsonObject requestWeatherData(float latitude, float longitude,
             String startDate, String endDate, String timeZone) {
 
-        String result = "";
+        JsonObject result = null;
 
         try {
             // build uri
@@ -67,25 +80,70 @@ public class MeteostatUtilityService {
                     .header("x-api-key", apiKey)
                     .GET()
                     .build();
-
     
             // get response
+            LOGGER.info("Sending http request to meteostat: {}", request.toString());
             HttpResponse<String> response = client.send(request, 
                     HttpResponse.BodyHandlers.ofString());
             
             // make sure our response was ok
             if (response.statusCode() == 200) {
-                // get the body for our result
-                result = response.body();
+                // check and see if the data is valid JSON
+                JsonElement jsonElement = JsonParser.parseString(response.body());
+                if (jsonElement.isJsonObject()) {
+                    result = jsonElement.getAsJsonObject();
+                } else {
+                    LOGGER.error("Weather Data failed to be parsed into a JSON Object: {}", result);
+                    throw new IOException();
+                }
             } else {
                 LOGGER.error("Bad response from meteostat. Error code: {}", response.statusCode());
             }
+
+            
 
         } catch(IOException | InterruptedException e) {
             LOGGER.error("Failed to query for weather data {}", e);
         }
 
         return result;
+
+    }
+
+    /**
+     * Trims down weather data such that it only includes the data
+     * block and only includes times between the defined ZonedDateTimes
+     * @param weatherData - the weather data to trim down
+     * @param start - the start date and time (exclusive)
+     * @param end - the end date and time (exclusive)
+     * @return - the trimed down weather data in the form of a JsonObject
+     */
+    public JsonArray trimWeatherData(JsonObject weatherData, Instant start, Instant end, String timezone) {
+
+        JsonArray newData = new JsonArray();
+
+        JsonArray allData = weatherData.get("data").getAsJsonArray();
+
+        // Zone id and formatter for dates
+        ZoneId zoneId = ZoneId.of(timezone);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        
+        // loop through all data (would be good to just optimize this query later on)
+        for (int i = 0; i < allData.size(); i++) {
+
+            JsonObject data = allData.get(i).getAsJsonObject();
+
+            String time = data.get("time").getAsString();
+            Instant timeInstant = LocalDateTime.parse(time, formatter).atZone(zoneId).toInstant();
+
+            // check if range is between the start/end we're looking for
+            if (timeInstant.isAfter(start) && timeInstant.isBefore(end)) {
+                newData.add(data);
+            }
+
+        }
+
+        return newData;
 
     }
 

@@ -14,8 +14,7 @@ public class IncidentController {
 
     @GetMapping("/incident")
     public String getIncident() {
-        // return dataInitializer.incident.getJsonObject().toString();
-        return "";
+        return dataInitializer.enrichedData.toString();
     }
 
 

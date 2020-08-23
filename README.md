@@ -1,9 +1,9 @@
 # Incidents Project
 
-# Dependencies to Run
-    - Java 14
-
 # Running the App
+
+## Required to Run
+- Java 14
 
 ## Configuration
 
@@ -54,20 +54,20 @@ Currently, the way I'm displaying data in the UI is very limiting for how much d
 
 I can think of a couple different ways to approach this, but I'm leaning towards option 1:
 
-    1. Add an information panel somewhere in the browser such that information is displayed there when an item is clicked. That way, the pop-up doesn't clutter the map.
+1. Add an information panel somewhere in the browser such that information is displayed there when an item is clicked. That way, the pop-up doesn't clutter the map.
 
-    2. Format the pop-up to be more condensed and organized so that it can fit more data.
+2. Format the pop-up to be more condensed and organized so that it can fit more data.
 
 ## UI Improvements - MapboxGL
 
 This is my first time using MapboxGL, so there's still a lot to learn! A few nice additions that I didn't get to would be:
 
-    1. Move the map location to the incidents on the map on startup.
-    2. Dynamic sizing of the map with the browser.
-    3. Map icons different for incidents vs unit statuses.
-    4. Unit statuses potentially could have a route linking them together to show the path that was taken.
-    5. In MapboxGL, it appears that if two points have the same coordinates, one will get overridden. I'd need to look more into how to handle this.
+1. Move the map location to the incidents on the map on startup.
+2. Dynamic sizing of the map with the browser.
+3. Map icons different for incidents vs unit statuses.
+4. Unit statuses potentially could have a route linking them together to show the path that was taken.
+5. In MapboxGL, it appears that if two points have the same coordinates, one will get overridden. I'd need to look more into how to handle this.
 
 # Time Spent
 
-I spent roughly 12 hours on this project (with breaks throughout the day).
+I spent roughly 12 hours on this project.

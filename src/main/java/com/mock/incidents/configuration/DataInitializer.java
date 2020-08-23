@@ -1,7 +1,6 @@
 package com.mock.incidents.configuration;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mock.incidents.component.IncidentDataReader;
 import com.mock.incidents.model.Incident;

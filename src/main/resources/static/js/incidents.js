@@ -14,16 +14,7 @@ function incidentRequestCallback(response) {
     var jsonResponse = JSON.parse(response);
 
     // address
-    var newIncidentPoint = createPoints(jsonResponse);
-
-    // weather ------------
-    var latitude = jsonResponse.address.latitude;
-    var longitude = jsonResponse.address.longitude;
-    var eventOpened = jsonResponse.description.event_opened;
-    var eventClosed = jsonResponse.description.event_closed;
-    var startDate = eventOpened.split("T", 1)[0];
-    var endDate = eventClosed.split("T", 1)[0];
-    var timeZone = jsonResponse.fire_department.timezone;
+    createPoints(jsonResponse);
 
     // load the MapboxGL map
     loadMap();
@@ -272,38 +263,102 @@ function loadMap() {
     });
 
     map.on('click', function(e) {
-        var features = map.queryRenderedFeatures(e.point, {
-            layers: ['incidents'] // replace this with the name of the layer
-        });
-    
-        // if no features, return
-        if (!features.length) {
-            return;
-        }
-    
-        var feature = features[0];
 
-        // get vars to populate the popup with
-        var json = JSON.parse(feature.properties.json);
-        var address = json.address.address_line1 + ', ' + json.address.city + ', ' + json.address.state;
-        var crossStreets = json.address.cross_street1 + " and " + json.address.cross_street2;
-        // description
-        var comments = json.description.comments;
-        var dayOfWeek = json.description.day_of_week;
-        var eventId = json.description.eventId;
-        var eventOpened = json.description.eventOpened;
-        var eventClosed = json.description.eventClosed;
-        var incidentNumber = json.description.incidentNumber;
-        var subtype = json.description.subtype;
-        var type = json.description.type;
+        // incidents
+        var features = map.queryRenderedFeatures(e.point, {
+            layers: ['incidents']
+        });
+        // only create popup if features exist
+        if (features.length) {
+            createPopupForIncidents(features, map);
+        }
+
+        // apparatuses
+        var features = map.queryRenderedFeatures(e.point, {
+            layers: ['apparatuses']
+        });
+        // only create popup if features exist
+        if (features.length) {
+            createPopupForApparatus(features, map);
+        }
         
-        var popup = new mapboxgl.Popup({ offset: [0, -15] })
-            .setLngLat(feature.geometry.coordinates)
-            .setHTML('<h3>' + feature.properties.title + '</h3>'
-                + '<p><b>Address:</b><br>' + address + '</br></p>'
-                )
-            .addTo(map);
     });
+
+}
+
+/**
+ * Creates the popup for an incident
+ * @param {JSON} features 
+ */
+function createPopupForIncidents(features, map) {
+    var feature = features[0];
+
+    // get vars to populate the popup with
+    var json = JSON.parse(feature.properties.json);
+    var address = json.address.address_line1 + ', ' + json.address.city + ', ' + json.address.state;
+    // description
+    var eventOpened = json.description.event_opened;
+    var eventClosed = json.description.event_closed;
+    var type = json.description.type;
+    // fire department
+    var fireDepartmentName = json.fire_department.name;
+    // weather (only fill with first entry)
+    var weather;
+    if (json.weather[0]) {
+        var temp = "temp: " + json.weather[0].temp + ", ";
+        var dwpt = "dwpt: " + json.weather[0].dwpt + ", ";
+        var rhum = "rhum: " + json.weather[0].rhum + ", ";
+        var prcp = "prcp: " + json.weather[0].prcp + ", ";
+        var snow = "snow: " + json.weather[0].snow + ", ";
+        var wdir = "wdir: " + json.weather[0].wdir + ", ";
+        var wspd = "wspd: " + json.weather[0].wspd + ", ";
+        var wpgt = "wpgt: " + json.weather[0].wpgt + ", ";
+        var pres = "pres: " + json.weather[0].pres + ", ";
+        weather = temp + dwpt + rhum + prcp + snow + wdir + wspd + wpgt + pres
+    } else {
+        weather = "No weather data found."
+    }
+    
+    var popup = new mapboxgl.Popup({ offset: [0, -15] })
+        .setLngLat(feature.geometry.coordinates)
+        .setHTML('<h3>' + feature.properties.title + '</h3>'
+            + '<p><b>Start Time:</b><br>' + eventOpened + '</br></p>'
+            + '<p><b>End Time:</b><br>' + eventClosed + '</br></p>'
+            + '<p><b>Address:</b><br>' + address + '</br></p>'
+            + '<p><b>Fire Department:</b><br>' + fireDepartmentName + '</br></p>'
+            + '<p><b>Type:</b><br>' + type + '</br></p>'
+            + '<p><b>Weather:</b><br>' + weather + '</br></p>'
+        )
+        .addTo(map);
+}
+
+/**
+ * Creates the popup for an apparatus unit status
+ * @param {JSON} features 
+ */
+function createPopupForApparatus(features, map) {
+    var feature = features[0];
+
+    // get vars to populate the popup with
+    var json = JSON.parse(feature.properties.json);
+    var carId = json.car_id;
+    var shift = json.shift;
+    var station = json.station;
+    var unitId = json.unit_id;
+    var unitType = json.unit_type;
+    var timestamp = feature.properties.timestamp;
+
+    var popup = new mapboxgl.Popup({ offset: [0, -15] })
+        .setLngLat(feature.geometry.coordinates)
+        .setHTML('<h3>' + feature.properties.title + '</h3>'
+            + '<p><b>Timestamp:</b><br>' + timestamp + '</br></p>'
+            + '<p><b>Car ID:</b><br>' + carId + '</br></p>'
+            + '<p><b>Shift:</b><br>' + shift + '</br></p>'
+            + '<p><b>Station:</b><br>' + station + '</br></p>'
+            + '<p><b>Unit ID:</b><br>' + unitId + '</br></p>'
+            + '<p><b>Unit Type:</b><br>' + unitType + '</br></p>'
+        )
+        .addTo(map);
 
 }
 

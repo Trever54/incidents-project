@@ -19,6 +19,11 @@ Use the -Dspring.config.location argument to override the application.properties
 
     java -Dspring.config.location=src\main\resources\application.properties -jar target\incidents-0.0.1-SNAPSHOT.jar
 
+Or as a developer, you can run the app with maven
+
+    mvn clean package
+    mvn spring-boot:run
+
 # Improvements if given more time
 
 The below are several improvements I would make given more time on this project.

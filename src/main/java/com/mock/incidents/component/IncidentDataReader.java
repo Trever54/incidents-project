@@ -1,16 +1,21 @@
-package com.mock.incidents.configuration;
+package com.mock.incidents.component;
 
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.Date;
+import java.util.TimeZone;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -18,10 +23,11 @@ import com.google.gson.JsonParser;
 import com.mock.incidents.model.Incident;
 
 /**
- * The purpose of this class is to read and store a
- * JSON config file whose location is specified in application.properties.
+ * The purpose of this class is to read incident data into a jsonObject
+ * 
+ * The JSON config file to be read is specified in application.properties.
  */
-@Configuration
+@Component
 public class IncidentDataReader {
 
     /**
@@ -30,19 +36,10 @@ public class IncidentDataReader {
     private final static Logger LOGGER = LogManager.getLogger(IncidentDataReader.class);
 
     /**
-     * Absolute path to the data file to read
+     * Reads JSON incident data and returns an incident object
+     * that represents that data
      */
-    @Value("${data.file}")
-    private String stringPath;
-
-    public Incident incident;
-
-    /**
-     * Bean which reads and stores the JSON data on startup of the application
-     * such that it can be accessed by other parts of the application
-     */
-    @Bean
-    public Incident readData() {
+    public Incident readData(String stringPath) {
 
         LOGGER.info("Reading in data from path: '{}'", stringPath);
 
@@ -51,8 +48,6 @@ public class IncidentDataReader {
 
         // parse info into an Incident object
         Incident incident = parseIncident(jsonContent);
-
-        this.incident = incident;
 
         return incident;
 
@@ -115,17 +110,25 @@ public class IncidentDataReader {
             JsonObject description = jsonContent.get("description").getAsJsonObject();
             String eventOpened = description.get("event_opened").getAsString();
             String eventClosed = description.get("event_closed").getAsString();
-            String startDate = eventOpened.split("T")[0];
-            String endDate = eventClosed.split("T")[0];
+            String startDateString = eventOpened.split("T")[0];
+            String endDateString = eventClosed.split("T")[0];
 
             // fire department
             JsonObject fireDepartment = jsonContent.get("fire_department").getAsJsonObject();
             String timeZone = fireDepartment.get("timezone").getAsString();
 
-            incident = new Incident(jsonContent, latitude, longitude, startDate, endDate, timeZone);
+            // Actual dates, including time (needed to weed through the meteostat weather service response)
+            ZoneId zoneId = ZoneId.of(timeZone);
+            Instant startInstant = Instant.parse(eventOpened);
+            ZonedDateTime startDateWithTime = startInstant.atZone(zoneId);
+            Instant endInstant = Instant.parse(eventClosed);
+            ZonedDateTime endDateWithTime = endInstant.atZone(zoneId);
 
-        } catch (NullPointerException e) {
-            LOGGER.error("Failed to create incident object for JSON: {}", jsonContent);
+            incident = new Incident(jsonContent, latitude, longitude, 
+                    startDateString, endDateString, timeZone, startDateWithTime, endDateWithTime);
+
+        } catch (NullPointerException | IllegalArgumentException e) {
+            LOGGER.error("Failed to create incident object for JSON: {}", jsonContent, e);
         }
 
         return incident;

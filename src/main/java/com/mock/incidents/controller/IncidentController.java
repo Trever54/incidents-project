@@ -1,6 +1,6 @@
 package com.mock.incidents.controller;
 
-import com.mock.incidents.configuration.IncidentDataReader;
+import com.mock.incidents.configuration.DataInitializer;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,11 +10,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class IncidentController {
     
     @Autowired
-    IncidentDataReader incidentDataReader;
+    DataInitializer dataInitializer;
 
     @GetMapping("/incident")
     public String getIncident() {
-        return incidentDataReader.incident.getJsonObject().toString();
+        // return dataInitializer.incident.getJsonObject().toString();
+        return "";
     }
 
 

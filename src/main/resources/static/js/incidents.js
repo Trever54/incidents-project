@@ -1,58 +1,8 @@
 
 // addresses to show on the map
-var addresses = []
+var incidents = []
 // Apparatus locations to show on the map
 var apparatuses = []
-
-/**
- * Set the request header for calls to the weather service
- * @param {*} xhr 
- */
-function setMeteostatHeader(xhr) {
-    xhr.setRequestHeader('x-api-key', 'HmkeDwKh8hmbjni9mjKqN7hzrAWKw0dG');
-}
-
-/**
- * Request data from the weather service for a specific location at a specific time
- * for a given timezone
- * @param {float} latitude 
- * @param {float} longitude 
- * @param {string} startDate 
- * @param {string} endDate 
- * @param {string} timeZone 
- */
-function requestWeatherData(latitude, longitude, startDate, endDate, timeZone) {
-
-    // create the params obj
-    var data = {
-        lat: latitude,
-        lon: longitude,
-        start: startDate,
-        end: endDate,
-        tz: timeZone
-    }
-
-    // url for weather data
-    url = "https://api.meteostat.net/v2/point/hourly"
-
-    // make a GET request to the weather service
-    $.ajax({
-        url: url,
-        data: data,
-        type: "GET",
-        beforeSend: setMeteostatHeader,
-        success: weatherRequestCallback
-     });
-
-}
-
-/**
- * Callback method to handle response from the weather service
- * @param {*} response - the success response from the weather service
- */
-function weatherRequestCallback(response) {
-    console.log(response);
-}
 
 /**
  * Callback method to handle response from the incident service
@@ -64,13 +14,7 @@ function incidentRequestCallback(response) {
     var jsonResponse = JSON.parse(response);
 
     // address
-    var newAddressPoint = createAddressPoint(jsonResponse.address);
-    // TODO - race condition here right now, if the map loads before this the data won't be displayed
-    addresses.push(newAddressPoint); 
-
-    
-
-
+    var newIncidentPoint = createPoints(jsonResponse);
 
     // weather ------------
     var latitude = jsonResponse.address.latitude;
@@ -81,11 +25,8 @@ function incidentRequestCallback(response) {
     var endDate = eventClosed.split("T", 1)[0];
     var timeZone = jsonResponse.fire_department.timezone;
 
-    // request weather data to be displayed for this location
-    // requestWeatherData(latitude, longitude, startDate, endDate, timeZone)  
-
+    // load the MapboxGL map
     loadMap();
-
 
 }
 
@@ -93,14 +34,15 @@ function incidentRequestCallback(response) {
  * Load the address point onto the map for this response
  * @param {JSON} jsonResponse 
  */
-function createAddressPoint(addressJson) {
+function createPoints(json) {
 
-    var latitude = addressJson.latitude;
-    var longitude = addressJson.longitude;
-    var name = addressJson.name;
-    var address = addressJson.address_line1 + ', ' + addressJson.city + ', ' + addressJson.state;
+    // lat and lon
+    var latitude = json.address.latitude;
+    var longitude = json.address.longitude;
+    var name = json.address.name;
 
-    var addressPoint = {
+    // create point for incident
+    var incidentPoint = {
         // feature for Mapbox DC
         'type': 'Feature',
         'geometry': {
@@ -110,25 +52,141 @@ function createAddressPoint(addressJson) {
         },
         'properties': {
             'title': name,
-            'address': address
+            'json': json
         }
     }
 
-    return addressPoint;
+    // add incident point
+    incidents.push(incidentPoint); 
+
+    // create points for each apparatus
+    var apparatusArray = json.apparatus;
+    apparatusArray.forEach(function(apparatus) {
+        createApparatusPoints(apparatus);
+    })
 
 }
 
-function createApparatusPoint(apparatus) {
-
+/**
+ * Function that creates the apparatus points for
+ * some incident
+ * @param {JSON} apparatus - a single apparatus json object
+ */
+function createApparatusPoints(apparatus) {
     
+    // loop through each status to get our points
+    var status = apparatus.unit_status;
+    var carId = apparatus.car_id;
+
+    if (status.acknowledged) {
+        var acknowledgedStatusPoint = {
+            // feature for Mapbox DC
+            'type': 'Feature',
+            'geometry': {
+                'type': 'Point',
+                // longitude, latitude
+                'coordinates': [status.acknowledged.longitude, status.acknowledged.latitude]
+            },
+            'properties': {
+                'title': "Acknowledged: " + carId,
+                'json': apparatus,
+                'timestamp': status.acknowledged.timestamp
+            }
+        }
+        apparatuses.push(acknowledgedStatusPoint);
+    }
+    
+    if (status.arrived) {
+        var arrivedStatusPoint = {
+            // feature for Mapbox DC
+            'type': 'Feature',
+            'geometry': {
+                'type': 'Point',
+                // longitude, latitude
+                'coordinates': [status.arrived.longitude, status.arrived.latitude]
+            },
+            'properties': {
+                'title': "Arrived: " + carId,
+                'json': apparatus,
+                'timestamp': status.arrived.timestamp
+            }
+        }
+        apparatuses.push(arrivedStatusPoint);
+    }
+
+    if (status.available) {
+        var availableStatusPoint = {
+            // feature for Mapbox DC
+            'type': 'Feature',
+            'geometry': {
+                'type': 'Point',
+                // longitude, latitude
+                'coordinates': [status.available.longitude, status.available.latitude]
+            },
+            'properties': {
+                'title': "Available: " + carId,
+                'json': apparatus,
+                'timestamp': status.available.timestamp
+            }
+        }
+        apparatuses.push(availableStatusPoint);
+    }
+    
+    if (status.cleared) {
+        var clearedStatusPoint = {
+            // feature for Mapbox DC
+            'type': 'Feature',
+            'geometry': {
+                'type': 'Point',
+                // longitude, latitude
+                'coordinates': [status.cleared.longitude, status.cleared.latitude]
+            },
+            'properties': {
+                'title': "Cleared: " + carId,
+                'json': apparatus,
+                'timestamp': status.cleared.timestamp
+            }
+        }
+        apparatuses.push(clearedStatusPoint);
+    }
+    
+    if (status.dispatched) {
+        var dispatchedStatusPoint = {
+            // feature for Mapbox DC
+            'type': 'Feature',
+            'geometry': {
+                'type': 'Point',
+                // longitude, latitude
+                'coordinates': [status.dispatched.longitude, status.dispatched.latitude]
+            },
+            'properties': {
+                'title': "Dispatched: " + carId,
+                'json': apparatus,
+                'timestamp': status.dispatched.timestamp
+            }
+        }
+        apparatuses.push(dispatchedStatusPoint);
+    }
+    
+    if (status.enroute) {
+        var enrouteStatusPoint = {
+            // feature for Mapbox DC
+            'type': 'Feature',
+            'geometry': {
+                'type': 'Point',
+                // longitude, latitude
+                'coordinates': [status.enroute.longitude, status.enroute.latitude]
+            },
+            'properties': {
+                'title': "Enroute: " + carId,
+                'json': apparatus,
+                'timestamp': status.enroute.timestamp
+            }
+        }
+        apparatuses.push(enrouteStatusPoint);
+    }
 
 }
-
-// GET to this service to get the incident to display
-$.get("http://localhost:8080/incident", incidentRequestCallback);
-
-
-
 
 // MapboxGL stuff below:
 function loadMap() {
@@ -147,22 +205,54 @@ function loadMap() {
             'https://docs.mapbox.com/mapbox-gl-js/assets/custom_marker.png',
             function (error, image) {
                 if (error) throw error;
-                map.addImage('custom-marker', image);
 
-                // Add a GeoJSON source with point(s)
-                map.addSource('addresses', {
+                // add images
+                map.addImage('custom-marker', image);
+                map.addImage('apparatus-marker', image)
+
+                // Add incidents source
+                map.addSource('incidents', {
                     'type': 'geojson',
                     'data': {
                         'type': 'FeatureCollection',
-                        'features': addresses
+                        'features': incidents
                     }
                 });
 
-                // Address icons to the map
+                // Add apparatuses source
+                map.addSource('apparatuses', {
+                    'type': 'geojson',
+                    'data': {
+                        'type': 'FeatureCollection',
+                        'features': apparatuses
+                    }
+                });
+
+                // Apparatuses icons to the map
                 map.addLayer({
-                    'id': 'addresses',
+                    'id': 'apparatuses',
                     'type': 'symbol',
-                    'source': 'addresses',
+                    'source': 'apparatuses',
+                    'layout': {
+                        'icon-image': 'custom-marker',
+                        // get the title name from the source's "title" property
+                        'text-field': ['get', 'title'],
+                        'text-font': [
+                            'Open Sans Regular',
+                            'Arial Unicode MS Regular'
+                        ],
+                        'text-offset': [0, 1.25],
+                        'text-anchor': 'top'
+                    }
+                });
+
+                // Incident icons to the map
+                // TODO - this layer goes second because otherwise some of the
+                // points will override the incident point. Not sure how to handle that.
+                map.addLayer({
+                    'id': 'incidents',
+                    'type': 'symbol',
+                    'source': 'incidents',
                     'layout': {
                         'icon-image': 'custom-marker',
                         // get the title name from the source's "title" property
@@ -175,13 +265,15 @@ function loadMap() {
                         'text-anchor': 'top'
                     }
                 });
+
             }
         );
+        
     });
 
     map.on('click', function(e) {
         var features = map.queryRenderedFeatures(e.point, {
-            layers: ['addresses'] // replace this with the name of the layer
+            layers: ['incidents'] // replace this with the name of the layer
         });
     
         // if no features, return
@@ -190,12 +282,30 @@ function loadMap() {
         }
     
         var feature = features[0];
-    
+
+        // get vars to populate the popup with
+        var json = JSON.parse(feature.properties.json);
+        var address = json.address.address_line1 + ', ' + json.address.city + ', ' + json.address.state;
+        var crossStreets = json.address.cross_street1 + " and " + json.address.cross_street2;
+        // description
+        var comments = json.description.comments;
+        var dayOfWeek = json.description.day_of_week;
+        var eventId = json.description.eventId;
+        var eventOpened = json.description.eventOpened;
+        var eventClosed = json.description.eventClosed;
+        var incidentNumber = json.description.incidentNumber;
+        var subtype = json.description.subtype;
+        var type = json.description.type;
+        
         var popup = new mapboxgl.Popup({ offset: [0, -15] })
             .setLngLat(feature.geometry.coordinates)
             .setHTML('<h3>' + feature.properties.title + '</h3>'
-                + '<p><b>Address:</b><br>' + feature.properties.address + '</br></p>')
+                + '<p><b>Address:</b><br>' + address + '</br></p>'
+                )
             .addTo(map);
     });
 
 }
+
+// GET to this service to get the incident to display
+$.get("http://localhost:8080/incident", incidentRequestCallback);

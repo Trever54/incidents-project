@@ -1,0 +1,6 @@
+com\mock\incidents\configuration\DataInitializer.class
+com\mock\incidents\controller\IncidentController.class
+com\mock\incidents\IncidentsApplication.class
+com\mock\incidents\service\MeteostatUtilityService.class
+com\mock\incidents\component\IncidentDataReader.class
+com\mock\incidents\model\Incident.class

@@ -71,3 +71,7 @@ This is my first time using MapboxGL, so there's still a lot to learn! A few nic
 # Time Spent
 
 I spent roughly 12 hours on this project.
+
+# Screenshots
+
+Screenshots of the working app are located in the screenshots directory of this repo.
